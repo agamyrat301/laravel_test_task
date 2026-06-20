@@ -1,6 +1,6 @@
 # Developer Portfolio API
 
-A production-ready Laravel 10 backend service for a developer's landing page. Handles contact form submissions with full validation, AI-powered analysis via Anthropic Claude, dual email notifications, structured file-based logging, and rate limiting.
+A production-ready Laravel 10 backend service for a developer's landing page. Handles contact form submissions with full validation, AI-powered analysis via Google Gemini, dual email notifications, structured file-based logging, and rate limiting.
 
 ---
 
@@ -36,8 +36,8 @@ Swagger UI is at `http://localhost:8000/docs/index.html`.
 
 | Variable | Description | Default |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Anthropic API key for AI analysis | *(empty — AI skipped)* |
-| `ANTHROPIC_MODEL` | Claude model to use | `claude-haiku-4-5-20251001` |
+| `GEMINI_API_KEY` | Google Gemini API key for AI analysis | *(empty — AI skipped)* |
+| `GEMINI_MODEL` | Gemini model to use | `gemini-2.0-flash` |
 | `AI_ENABLED` | Toggle AI on/off globally | `true` |
 | `AI_TIMEOUT` | HTTP timeout for AI calls (seconds) | `30` |
 | `OWNER_EMAIL` | Email address that receives contact notifications | *(empty)* |
@@ -58,7 +58,7 @@ Swagger UI is at `http://localhost:8000/docs/index.html`.
 | Language | PHP 8.1 |
 | Framework | Laravel 10 |
 | HTTP Client | GuzzleHTTP 7 (bundled with Laravel) |
-| AI Provider | Anthropic Claude (`claude-haiku-4-5-20251001`) |
+| AI Provider | Google Gemini (`gemini-2.0-flash`) |
 | Email | Laravel Mailer + Blade templates (Tailwind CSS via CDN) |
 | Rate Limiting | Laravel RateLimiter (file cache driver) |
 | Storage | File system — JSON metrics, JSONL logs |
@@ -74,7 +74,7 @@ The project follows a strict layered architecture — HTTP concerns never bleed 
 routes/api.php
     └── Http/Controllers/Api/        ← receive request, return response
             └── Services/            ← orchestrate business logic
-                    ├── AiService          ← Anthropic API + graceful fallback
+                    ├── AiService          ← Gemini API + graceful fallback
                     ├── MailService        ← owner + user email notifications
                     └── ContactService     ← coordinates all of the above
                             └── Repositories/    ← file I/O only
@@ -166,7 +166,7 @@ Returns the operational status of all service components.
     "cache":   { "ok": true, "driver": "file" },
     "storage": { "ok": true, "writable": true },
     "mail":    { "ok": true, "mailer": "smtp" },
-    "ai":      { "ok": true, "enabled": true, "key_set": true, "model": "claude-haiku-4-5-20251001" }
+    "ai":      { "ok": true, "enabled": true, "provider": "gemini", "key_set": true, "model": "gemini-2.0-flash" }
   }
 }
 ```
@@ -218,7 +218,7 @@ Update `APP_URL` in `.env` and share `https://abc123.ngrok.io/api`.
 2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**.
 3. Set the following environment variables in the Railway dashboard (copy from `.env.example`):
    - `APP_KEY` (run `php artisan key:generate --show` locally)
-   - `ANTHROPIC_API_KEY`
+   - `GEMINI_API_KEY`
    - `OWNER_EMAIL`
    - `MAIL_MAILER=log` (until you wire up a real SMTP provider)
 4. Railway auto-detects PHP and runs `php artisan serve`.
@@ -261,7 +261,7 @@ curl http://localhost:8000/api/metrics
 
 ## AI Integration
 
-**Provider:** Anthropic Claude (`claude-haiku-4-5-20251001`)
+**Provider:** Google Gemini (`gemini-2.0-flash`)
 **Triggered on:** every `POST /api/contact`
 
 **What the AI does in a single API call:**
@@ -292,7 +292,7 @@ Respond with ONLY the JSON object. No markdown fences, no explanations.
 
 The returned JSON is validated field-by-field; any unexpected or out-of-range values are replaced with safe defaults before being stored or returned.
 
-**Graceful fallback** — if AI is disabled, the key is missing, or the Anthropic API returns an error, the service continues without interruption:
+**Graceful fallback** — if AI is disabled, the key is missing, or the Gemini API returns an error, the service continues without interruption:
 ```json
 {
   "sentiment":       "neutral",
@@ -327,7 +327,7 @@ This project was developed with **Claude (claude-sonnet-4-6)** as an AI pair-pro
 
 **AI-assisted parts:**
 - Architecture design (layered structure, repository pattern decisions)
-- `AiService` — Anthropic API integration, prompt engineering, JSON sanitisation, fallback logic
+- `AiService` — Gemini API integration, prompt engineering, JSON sanitisation, fallback logic
 - All boilerplate (Mail classes, Form Requests, Middleware, Blade email templates)
 - OpenAPI 3.0 specification (`public/docs/openapi.yaml`)
 - This README

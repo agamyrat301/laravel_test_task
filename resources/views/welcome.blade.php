@@ -185,7 +185,7 @@
                 ['Git',         'bg-orange-500/15 text-orange-300 border-orange-500/30'],
             ],
             'AI & Tools' => [
-                ['Anthropic API',    'bg-violet-500/15 text-violet-300 border-violet-500/30'],
+                ['Gemini API',       'bg-violet-500/15 text-violet-300 border-violet-500/30'],
                 ['OpenAI API',       'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'],
                 ['OpenAPI / Swagger','bg-lime-500/15 text-lime-300 border-lime-500/30'],
                 ['Postman',          'bg-orange-500/15 text-orange-300 border-orange-500/30'],
@@ -222,8 +222,8 @@
         $projects = [
             [
                 'title' => 'Developer Portfolio API',
-                'desc'  => 'Production-ready Laravel 10 backend with AI-powered contact analysis (Anthropic Claude), rate limiting, structured JSONL logging, and OpenAPI 3.0 documentation.',
-                'tech'  => ['Laravel', 'Anthropic AI', 'Swagger', 'Docker'],
+                'desc'  => 'Production-ready Laravel 10 backend with AI-powered contact analysis (Google Gemini), rate limiting, structured JSONL logging, and OpenAPI 3.0 documentation.',
+                'tech'  => ['Laravel', 'Gemini AI', 'Swagger', 'Docker'],
                 'color' => 'bg-indigo-500/15 text-indigo-300',
                 'href'  => '#contact',
             ],
@@ -307,7 +307,7 @@
                 @endforeach
 
                 <div class="mt-8 p-4 rounded-xl bg-indigo-600/10 border border-indigo-500/20 text-sm text-indigo-300">
-                    <p class="font-semibold mb-1">Powered by Anthropic AI</p>
+                    <p class="font-semibold mb-1">Powered by Google Gemini</p>
                     <p class="text-indigo-400/80 leading-relaxed">
                         Your message is analysed for sentiment and intent. You'll receive
                         a personalised AI-generated reply instantly on submission.
