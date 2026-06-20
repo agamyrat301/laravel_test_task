@@ -1,0 +1,156 @@
+{
+  "info": {
+    "name": "Developer Portfolio API",
+    "description": "Contact form backend with AI-powered analysis (sentiment, classification, auto-response).\n\nBase URL is stored in the `base_url` collection variable — change it once to point at your environment.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Contact",
+      "item": [
+        {
+          "name": "Submit contact form (valid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/contact", "host": ["{{base_url}}"], "path": ["contact"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\":    \"Jane Smith\",\n  \"phone\":   \"+998901234567\",\n  \"email\":   \"jane@example.com\",\n  \"comment\": \"I would like to discuss a potential collaboration on an exciting new project with you.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Happy-path submission. Returns AI sentiment, request type, and auto-generated response."
+          },
+          "response": [
+            {
+              "name": "200 OK — message received",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Your message has been received. We will get back to you shortly.\",\n  \"data\": {\n    \"auto_response\": \"Thank you for reaching out, Jane! We'd be happy to discuss a collaboration. We'll review your message and get back to you within 1-2 business days.\",\n    \"request_type\": \"partnership\",\n    \"sentiment\": \"positive\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Submit contact form (validation error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/contact", "host": ["{{base_url}}"], "path": ["contact"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\":    \"J\",\n  \"phone\":   \"\",\n  \"email\":   \"not-an-email\",\n  \"comment\": \"short\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Triggers 422 validation errors for all four fields."
+          },
+          "response": [
+            {
+              "name": "422 Unprocessable Entity",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed.\",\n  \"errors\": {\n    \"name\":    [\"Name must be at least 2 characters.\"],\n    \"phone\":   [\"Phone number is required.\"],\n    \"email\":   [\"Please provide a valid email address.\"],\n    \"comment\": [\"Comment must be at least 10 characters.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Submit contact form (missing body)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/contact", "host": ["{{base_url}}"], "path": ["contact"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Empty body — all four fields are required."
+          }
+        },
+        {
+          "name": "Submit contact form — negative sentiment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/contact", "host": ["{{base_url}}"], "path": ["contact"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\":    \"Angry Customer\",\n  \"phone\":   \"+79001234567\",\n  \"email\":   \"angry@example.com\",\n  \"comment\": \"Your service is absolutely terrible and I am very disappointed with the complete lack of response to my previous messages.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Triggers negative sentiment classification by the AI."
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] },
+            "description": "Returns status of cache, storage, mail, and AI components.\nHTTP 200 = all healthy, HTTP 207 = one or more degraded."
+          },
+          "response": [
+            {
+              "name": "200 OK — all healthy",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"status\": \"healthy\",\n  \"version\": \"1.0.0\",\n  \"checks\": {\n    \"cache\":   { \"ok\": true, \"driver\": \"file\" },\n    \"storage\": { \"ok\": true, \"writable\": true },\n    \"mail\":    { \"ok\": true, \"mailer\": \"smtp\" },\n    \"ai\":      { \"ok\": true, \"enabled\": true, \"key_set\": true, \"model\": \"claude-haiku-4-5-20251001\" }\n  }\n}"
+            },
+            {
+              "name": "207 Multi-Status — degraded (no AI key)",
+              "status": "Multi-Status",
+              "code": 207,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"status\": \"degraded\",\n  \"version\": \"1.0.0\",\n  \"checks\": {\n    \"cache\":   { \"ok\": true,  \"driver\": \"file\" },\n    \"storage\": { \"ok\": true,  \"writable\": true },\n    \"mail\":    { \"ok\": true,  \"mailer\": \"smtp\" },\n    \"ai\":      { \"ok\": false, \"enabled\": true, \"key_set\": false, \"model\": \"claude-haiku-4-5-20251001\" }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Metrics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/metrics", "host": ["{{base_url}}"], "path": ["metrics"] },
+            "description": "Reads aggregate counters from storage/app/metrics.json. Updates after every POST /contact."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"total_requests\": 5,\n    \"successful_requests\": 5,\n    \"failed_requests\": 0,\n    \"sentiment_breakdown\": {\n      \"positive\": 3,\n      \"neutral\": 1,\n      \"negative\": 1\n    },\n    \"request_type_breakdown\": {\n      \"general_inquiry\": 2,\n      \"technical_support\": 0,\n      \"partnership\": 2,\n      \"complaint\": 1,\n      \"job_application\": 0,\n      \"other\": 0\n    },\n    \"ai_failures\": 0,\n    \"email_failures\": 3,\n    \"last_request_at\": \"2026-06-20T14:35:00+00:00\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

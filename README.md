@@ -195,6 +195,48 @@ Aggregate statistics from `storage/app/metrics.json`.
 
 ---
 
+## Deployment
+
+### Option 1 — ngrok (fastest, local machine)
+
+```bash
+# Terminal 1: start the Laravel server
+php artisan serve --port=8000
+
+# Terminal 2: expose it to the internet
+ngrok http 8000
+```
+
+ngrok gives you a public URL like `https://abc123.ngrok.io`.  
+Update `APP_URL` in `.env` and share `https://abc123.ngrok.io/api`.
+
+---
+
+### Option 2 — Railway
+
+1. Push this repo to GitHub.
+2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**.
+3. Set the following environment variables in the Railway dashboard (copy from `.env.example`):
+   - `APP_KEY` (run `php artisan key:generate --show` locally)
+   - `ANTHROPIC_API_KEY`
+   - `OWNER_EMAIL`
+   - `MAIL_MAILER=log` (until you wire up a real SMTP provider)
+4. Railway auto-detects PHP and runs `php artisan serve`.
+
+---
+
+### Option 3 — Docker
+
+```bash
+# Build and run
+docker build -t portfolio-api .
+docker run -p 8000:8000 --env-file .env portfolio-api
+```
+
+> See `Dockerfile` in the project root.
+
+---
+
 ## cURL Examples
 
 ```bash
@@ -227,7 +269,28 @@ curl http://localhost:8000/api/metrics
 2. **Request classification** — categorises the inquiry into one of: `general_inquiry`, `technical_support`, `partnership`, `complaint`, `job_application`, `other`
 3. **Auto-response generation** — writes a professional 2–3 sentence reply in the same language as the original comment
 
-**Prompt design:** a single structured prompt requests a strict JSON object. The returned JSON is validated field-by-field; any unexpected values are replaced with safe defaults before being used.
+**Prompt used** (`app/Services/AiService.php::buildPrompt()`):
+
+```
+You are an assistant analyzing contact form submissions for a developer's portfolio website.
+
+Analyze the submission below and return ONLY a valid JSON object with these exact keys:
+- "sentiment": one of "positive", "neutral", "negative"
+- "sentiment_score": float 0.0 (most negative) to 1.0 (most positive)
+- "request_type": one of "general_inquiry", "technical_support", "partnership", "complaint", "job_application", "other"
+- "auto_response": a professional, friendly 2-3 sentence reply to send to the user
+  (write it in the same language as the comment)
+
+Contact form submission:
+Name: {name}
+Email: {email}
+Phone: {phone}
+Comment: {comment}
+
+Respond with ONLY the JSON object. No markdown fences, no explanations.
+```
+
+The returned JSON is validated field-by-field; any unexpected or out-of-range values are replaced with safe defaults before being stored or returned.
 
 **Graceful fallback** — if AI is disabled, the key is missing, or the Anthropic API returns an error, the service continues without interruption:
 ```json
