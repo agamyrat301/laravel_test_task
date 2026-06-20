@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
 
 class AiService
@@ -23,12 +22,12 @@ class AiService
     public function __construct()
     {
         $this->enabled = (bool) config('ai.enabled', true);
-        $this->apiKey  = (string) config('ai.anthropic.key', '');
-        $this->model   = (string) config('ai.anthropic.model', 'claude-haiku-4-5-20251001');
+        $this->apiKey  = (string) config('ai.gemini.key', '');
+        $this->model   = (string) config('ai.gemini.model', 'gemini-1.5-flash');
         $this->timeout = (int) config('ai.timeout', 30);
 
         $this->client = new Client([
-            'base_uri' => 'https://api.anthropic.com',
+            'base_uri' => 'https://generativelanguage.googleapis.com',
             'timeout'  => $this->timeout,
         ]);
     }
@@ -36,7 +35,7 @@ class AiService
     public function analyzeContact(array $contactData): array
     {
         if (!$this->enabled || empty($this->apiKey)) {
-            Log::channel('contact_requests')->warning('AI analysis skipped: AI is disabled or ANTHROPIC_API_KEY is not set.');
+            Log::channel('contact_requests')->warning('AI analysis skipped: AI is disabled or GEMINI_API_KEY is not set.');
             return $this->fallback(false);
         }
 
@@ -75,23 +74,23 @@ PROMPT;
 
     private function callApi(string $prompt): array
     {
-        $response = $this->client->post('/v1/messages', [
-            'headers' => [
-                'x-api-key'         => $this->apiKey,
-                'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json',
-            ],
-            'json' => [
-                'model'      => $this->model,
-                'max_tokens' => 512,
-                'messages'   => [
-                    ['role' => 'user', 'content' => $prompt],
+        $response = $this->client->post(
+            "/v1beta/models/{$this->model}:generateContent?key={$this->apiKey}",
+            [
+                'json' => [
+                    'contents' => [
+                        ['parts' => [['text' => $prompt]]],
+                    ],
+                    'generationConfig' => [
+                        'maxOutputTokens' => 512,
+                        'temperature'     => 0.3,
+                    ],
                 ],
-            ],
-        ]);
+            ]
+        );
 
         $body = json_decode($response->getBody()->getContents(), true);
-        $text = trim($body['content'][0]['text'] ?? '');
+        $text = trim($body['candidates'][0]['content']['parts'][0]['text'] ?? '');
 
         // Strip markdown code fences if the model wrapped the JSON
         $text = preg_replace('/^```(?:json)?\s*|\s*```$/s', '', $text);

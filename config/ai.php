@@ -4,11 +4,11 @@ return [
 
     'enabled'  => env('AI_ENABLED', true),
     'timeout'  => (int) env('AI_TIMEOUT', 30),
-    'provider' => env('AI_PROVIDER', 'anthropic'),
+    'provider' => env('AI_PROVIDER', 'gemini'),
 
-    'anthropic' => [
-        'key'   => env('ANTHROPIC_API_KEY', ''),
-        'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001'),
+    'gemini' => [
+        'key'   => env('GEMINI_API_KEY', ''),
+        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
     ],
 
 ];
