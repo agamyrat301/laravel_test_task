@@ -88,6 +88,13 @@ routes/api.php
 - **Form Request** — validation and authorization decoupled from controllers
 - **Graceful degradation** — `AiService` falls back to safe defaults when the AI API is unavailable
 
+**Why these technology choices:**
+- **Laravel 10** over Slim/Lumen: the assignment scope (middleware, rate limiting, mail, validation, logging) maps naturally onto Laravel's built-in features. Using a micro-framework would mean rebuilding what Laravel provides out of the box, adding complexity with no benefit.
+- **Google Gemini (`gemini-2.0-flash`)** over OpenAI: generous free tier, low latency, and reliable structured JSON output for the prompt used. No credit card required to get started, which matters for a portfolio project that reviewers need to run locally.
+- **GuzzleHTTP** for the AI HTTP client: already bundled with Laravel — no extra Composer dependency needed.
+- **File-based storage** over a database: the assignment explicitly permits it, and it eliminates the need for a running database during evaluation. `flock()` ensures write safety without a transaction layer. If the project scaled, swapping `MetricsRepository` and `ContactLogRepository` for DB-backed implementations would be a small, isolated change.
+- **Static OpenAPI YAML + Swagger UI** over a code-generation package: the spec lives next to the code, is human-readable, and requires no annotations scattered across controllers. It is version-controlled and fully accurate without a build step.
+
 ---
 
 ## API Reference
@@ -332,9 +339,19 @@ This project was developed with **Claude (claude-sonnet-4-6)** as an AI pair-pro
 - OpenAPI 3.0 specification (`public/docs/openapi.yaml`)
 - This README
 
-**Manual decisions and overrides:**
-- Tailwind CSS specified for email templates (replaced initial plain-CSS output)
-- Phone validation regex adjusted for international number formats
-- File-locking strategy in `MetricsRepository` reviewed and confirmed
+**Key prompts used:**
 
-**Prompts used** were conversational, iterating from the full task brief. No code was copied from external sources; everything was generated and reviewed inline.
+*Initial architecture prompt:*
+> "Build a Laravel 10 backend service for a developer portfolio landing page. Requirements: POST /api/contact with validation (name, phone, email, comment), AI analysis (sentiment + classification + auto-response), dual email notifications (owner + user), file-based logging, rate limiting via env variable, GET /api/health, GET /api/metrics. Layered architecture: Controllers → Services → Repositories. No database — file storage only."
+
+*AiService prompt engineering:*
+> "Write a single Gemini API call that returns sentiment (positive/neutral/negative with 0–1 score), request_type (general_inquiry/technical_support/partnership/complaint/job_application/other), and auto_response in the same language as the comment. Return ONLY a JSON object — no markdown. Add a sanitize() method that validates each field and replaces unexpected values with safe defaults."
+
+*Frontend prompt:*
+> "Build a dark portfolio landing page using Tailwind CSS v4 and Alpine.js. Sections: navbar, hero, skills, featured projects, contact form. The contact form must POST to /api/contact and display the AI-generated auto_response on success."
+
+**What had to be corrected manually:**
+- Switched AI provider from Anthropic to Gemini (initial output used Anthropic; changed all config, service, and docs references)
+- Phone validation regex loosened to accept international formats with spaces and parentheses
+- Removed a duplicate `RateLimiter::for('api')` that existed in both `AppServiceProvider` and `RouteServiceProvider`
+- `MetricsRepository` file-locking approach reviewed and confirmed correct (`flock` + `rewind` + `ftruncate` pattern)
