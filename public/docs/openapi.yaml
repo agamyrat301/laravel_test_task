@@ -1,0 +1,308 @@
+openapi: 3.0.3
+
+info:
+  title: Developer Portfolio API
+  description: |
+    Backend API for a developer's landing-page portfolio.
+
+    Features:
+    - Contact form processing with input validation
+    - AI-powered sentiment analysis, request classification, and auto-response generation (Anthropic Claude)
+    - Email notifications to site owner and submitter
+    - File-based request logging and metrics
+    - Rate limiting (5 requests / min per IP on the contact endpoint)
+  version: 1.0.0
+  contact:
+    email: owner@devportfolio.local
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+
+tags:
+  - name: Contact
+    description: Contact form submission
+  - name: System
+    description: Health and operational metrics
+
+paths:
+
+  /contact:
+    post:
+      tags: [Contact]
+      summary: Submit contact form
+      description: |
+        Validates the payload, runs AI analysis (sentiment, classification,
+        auto-response), sends email notifications, logs the request, and
+        updates metrics. Responds with the AI-generated reply to show the user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactRequest'
+            example:
+              name: "Jane Smith"
+              phone: "+998901234567"
+              email: "jane@example.com"
+              comment: "I'd love to discuss a potential collaboration on a new project."
+      responses:
+        '200':
+          description: Message received and processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactResponse'
+              example:
+                success: true
+                message: "Your message has been received. We will get back to you shortly."
+                data:
+                  auto_response: "Thank you for reaching out, Jane! We'd be happy to discuss a collaboration. We'll review your message and get back to you within 1-2 business days."
+                  request_type: "partnership"
+                  sentiment: "positive"
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                success: false
+                message: "Validation failed."
+                errors:
+                  email: ["Please provide a valid email address."]
+                  comment: ["Comment must be at least 10 characters."]
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Too many requests. Please wait before submitting another message."
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      tags: [System]
+      summary: Service health check
+      description: |
+        Returns the operational status of all service components:
+        file cache, writable storage, mail configuration, and AI configuration.
+        Returns HTTP 200 when all checks pass, HTTP 207 when any check is degraded.
+      responses:
+        '200':
+          description: All components healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                success: true
+                status: "healthy"
+                version: "1.0.0"
+                checks:
+                  cache:
+                    ok: true
+                    driver: "file"
+                  storage:
+                    ok: true
+                    writable: true
+                  mail:
+                    ok: true
+                    mailer: "smtp"
+                  ai:
+                    ok: true
+                    enabled: true
+                    key_set: true
+                    model: "claude-haiku-4-5-20251001"
+        '207':
+          description: One or more components degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /metrics:
+    get:
+      tags: [System]
+      summary: Submission statistics
+      description: Returns aggregate statistics stored in the local metrics.json file.
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+              example:
+                success: true
+                data:
+                  total_requests: 42
+                  successful_requests: 40
+                  failed_requests: 2
+                  sentiment_breakdown:
+                    positive: 25
+                    neutral: 12
+                    negative: 5
+                  request_type_breakdown:
+                    general_inquiry: 15
+                    technical_support: 8
+                    partnership: 12
+                    complaint: 3
+                    job_application: 2
+                    other: 2
+                  ai_failures: 1
+                  email_failures: 0
+                  last_request_at: "2026-06-20T14:35:00+00:00"
+
+components:
+  schemas:
+
+    ContactRequest:
+      type: object
+      required: [name, phone, email, comment]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+          description: Full name of the sender
+        phone:
+          type: string
+          description: Phone number (7–20 chars, may include +, spaces, dashes, parentheses)
+          example: "+998901234567"
+        email:
+          type: string
+          format: email
+          description: Valid email address of the sender
+        comment:
+          type: string
+          minLength: 10
+          maxLength: 2000
+          description: Message body
+
+    ContactResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            auto_response:
+              type: string
+              description: AI-generated reply shown to the user
+            request_type:
+              type: string
+              enum: [general_inquiry, technical_support, partnership, complaint, job_application, other]
+            sentiment:
+              type: string
+              enum: [positive, neutral, negative]
+
+    HealthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        status:
+          type: string
+          enum: [healthy, degraded]
+        version:
+          type: string
+        checks:
+          type: object
+          properties:
+            cache:
+              type: object
+              properties:
+                ok: { type: boolean }
+                driver: { type: string }
+            storage:
+              type: object
+              properties:
+                ok: { type: boolean }
+                writable: { type: boolean }
+            mail:
+              type: object
+              properties:
+                ok: { type: boolean }
+                mailer: { type: string }
+            ai:
+              type: object
+              properties:
+                ok: { type: boolean }
+                enabled: { type: boolean }
+                key_set: { type: boolean }
+                model: { type: string }
+
+    MetricsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            total_requests:
+              type: integer
+            successful_requests:
+              type: integer
+            failed_requests:
+              type: integer
+            sentiment_breakdown:
+              type: object
+              properties:
+                positive: { type: integer }
+                neutral: { type: integer }
+                negative: { type: integer }
+            request_type_breakdown:
+              type: object
+              properties:
+                general_inquiry: { type: integer }
+                technical_support: { type: integer }
+                partnership: { type: integer }
+                complaint: { type: integer }
+                job_application: { type: integer }
+                other: { type: integer }
+            ai_failures:
+              type: integer
+            email_failures:
+              type: integer
+            last_request_at:
+              type: string
+              format: date-time
+              nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Validation failed."
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
