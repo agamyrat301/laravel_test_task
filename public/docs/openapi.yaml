@@ -16,6 +16,8 @@ info:
     email: owner@devportfolio.local
 
 servers:
+  - url: http://13.140.130.66/api
+    description: Live server
   - url: http://localhost:8000/api
     description: Local development
 

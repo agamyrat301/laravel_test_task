@@ -38,7 +38,6 @@ class MailService
     private function notifyOwner(array $data, array $aiResult): bool
     {
         $ownerEmail = config('mail.owner_email');
-
         if (empty($ownerEmail)) {
             Log::channel('contact_requests')->warning('Owner email not configured; skipping owner notification.');
             return false;
