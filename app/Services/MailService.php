@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+use Mailtrap\Api\EmailsSendApiInterface;
 use Mailtrap\MailtrapClient;
 use Mailtrap\Mime\MailtrapEmail;
 use Symfony\Component\Mime\Address;
@@ -17,10 +18,12 @@ class MailService
         ];
     }
 
-    private function client(): MailtrapClient
+    private function client(): EmailsSendApiInterface
     {
         return MailtrapClient::initSendingEmails(
-            apiKey: config('services.mailtrap.api_key')
+            apiKey:    config('services.mailtrap.api_key'),
+            isSandbox: (bool) config('services.mailtrap.sandbox'),
+            inboxId:   config('services.mailtrap.inbox_id') ? (int) config('services.mailtrap.inbox_id') : null,
         );
     }
 

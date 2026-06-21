@@ -32,7 +32,9 @@ return [
     ],
 
     'mailtrap' => [
-        'api_key' => env('MAILTRAP_API_KEY', ''),
+        'api_key'  => env('MAILTRAP_API_KEY', ''),
+        'sandbox'  => env('MAILTRAP_SANDBOX', false),
+        'inbox_id' => env('MAILTRAP_INBOX_ID'),
     ],
 
 ];
