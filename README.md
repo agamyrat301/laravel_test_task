@@ -48,8 +48,8 @@ Swagger UI is at `http://localhost:8000/docs/index.html`.
 
 | Variable | Description | Default |
 |---|---|---|
-| `GEMINI_API_KEY` | Google Gemini API key for AI analysis | *(empty — AI skipped)* |
-| `GEMINI_MODEL` | Gemini model to use | `gemini-2.0-flash` |
+| `GROQ_API_KEY` | Groq API key for AI analysis | *(empty — AI skipped)* |
+| `GROQ_MODEL` | Groq model to use | `llama-3.3-70b-versatile` |
 | `AI_ENABLED` | Toggle AI on/off globally | `true` |
 | `AI_TIMEOUT` | HTTP timeout for AI calls (seconds) | `30` |
 | `OWNER_EMAIL` | Email address that receives contact notifications | *(empty)* |
@@ -67,7 +67,7 @@ Swagger UI is at `http://localhost:8000/docs/index.html`.
 | Language | PHP 8.1 |
 | Framework | Laravel 10 |
 | HTTP Client | GuzzleHTTP 7 (bundled with Laravel) |
-| AI Provider | Google Gemini (`gemini-2.0-flash`) |
+| AI Provider | Groq (`llama-3.3-70b-versatile`) |
 | Email | Mailtrap PHP SDK + Blade templates (Tailwind CSS via CDN) |
 | Rate Limiting | Laravel RateLimiter (file cache driver) |
 | Storage | File system — JSON metrics, JSONL logs |
@@ -286,7 +286,7 @@ curl http://13.140.130.66/api/metrics
 
 ## AI Integration
 
-**Provider:** Google Gemini (`gemini-2.0-flash`)
+**Provider:** Groq (`llama-3.3-70b-versatile`)
 **Triggered on:** every `POST /api/contact`
 
 **What the AI does in a single API call:**

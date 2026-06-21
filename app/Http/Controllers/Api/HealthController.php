@@ -62,14 +62,14 @@ class HealthController extends Controller
     private function checkAiConfig(): array
     {
         $enabled = (bool) config('ai.enabled');
-        $hasKey  = !empty(config('ai.gemini.key'));
+        $hasKey  = !empty(config('ai.groq.key'));
 
         return [
             'ok'       => !$enabled || $hasKey,
             'enabled'  => $enabled,
-            'provider' => 'gemini',
+            'provider' => 'groq',
             'key_set'  => $hasKey,
-            'model'    => config('ai.gemini.model'),
+            'model'    => config('ai.groq.model'),
         ];
     }
 }

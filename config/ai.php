@@ -4,11 +4,11 @@ return [
 
     'enabled'  => env('AI_ENABLED', true),
     'timeout'  => (int) env('AI_TIMEOUT', 30),
-    'provider' => env('AI_PROVIDER', 'gemini'),
+    'provider' => env('AI_PROVIDER', 'groq'),
 
-    'gemini' => [
-        'key'   => env('GEMINI_API_KEY', ''),
-        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
+    'groq' => [
+        'key'   => env('GROQ_API_KEY', ''),
+        'model' => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
     ],
 
 ];

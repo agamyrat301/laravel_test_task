@@ -22,20 +22,24 @@ class AiService
     public function __construct()
     {
         $this->enabled = (bool) config('ai.enabled', true);
-        $this->apiKey  = (string) config('ai.gemini.key', '');
-        $this->model   = (string) config('ai.gemini.model', 'gemini-1.5-flash');
+        $this->apiKey  = (string) config('ai.groq.key', '');
+        $this->model   = (string) config('ai.groq.model', 'llama-3.3-70b-versatile');
         $this->timeout = (int) config('ai.timeout', 30);
 
         $this->client = new Client([
-            'base_uri' => 'https://generativelanguage.googleapis.com',
+            'base_uri' => 'https://api.groq.com',
             'timeout'  => $this->timeout,
+            'headers'  => [
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type'  => 'application/json',
+            ],
         ]);
     }
 
     public function analyzeContact(array $contactData): array
     {
         if (!$this->enabled || empty($this->apiKey)) {
-            Log::channel('contact_requests')->warning('AI analysis skipped: AI is disabled or GEMINI_API_KEY is not set.');
+            Log::channel('contact_requests')->warning('AI analysis skipped: AI is disabled or GROQ_API_KEY is not set.');
             return $this->fallback(false);
         }
 
@@ -74,25 +78,20 @@ PROMPT;
 
     private function callApi(string $prompt): array
     {
-        $response = $this->client->post(
-            "/v1beta/models/{$this->model}:generateContent?key={$this->apiKey}",
-            [
-                'json' => [
-                    'contents' => [
-                        ['parts' => [['text' => $prompt]]],
-                    ],
-                    'generationConfig' => [
-                        'maxOutputTokens' => 512,
-                        'temperature'     => 0.3,
-                    ],
+        $response = $this->client->post('/openai/v1/chat/completions', [
+            'json' => [
+                'model'       => $this->model,
+                'messages'    => [
+                    ['role' => 'user', 'content' => $prompt],
                 ],
-            ]
-        );
+                'max_tokens'  => 512,
+                'temperature' => 0.3,
+            ],
+        ]);
 
         $body = json_decode($response->getBody()->getContents(), true);
-        $text = trim($body['candidates'][0]['content']['parts'][0]['text'] ?? '');
+        $text = trim($body['choices'][0]['message']['content'] ?? '');
 
-        // Strip markdown code fences if the model wrapped the JSON
         $text = preg_replace('/^```(?:json)?\s*|\s*```$/s', '', $text);
 
         $parsed = json_decode($text, true);

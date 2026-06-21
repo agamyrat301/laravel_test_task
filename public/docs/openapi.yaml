@@ -7,7 +7,7 @@ info:
 
     Features:
     - Contact form processing with input validation
-    - AI-powered sentiment analysis, request classification, and auto-response generation (Google Gemini)
+    - AI-powered sentiment analysis, request classification, and auto-response generation (Groq / Llama 3.3)
     - Email notifications to site owner and submitter
     - File-based request logging and metrics
     - Rate limiting (5 requests / min per IP on the contact endpoint)
@@ -118,12 +118,13 @@ paths:
                     writable: true
                   mail:
                     ok: true
-                    mailer: "smtp"
+                    mailer: "mailtrap"
                   ai:
                     ok: true
                     enabled: true
+                    provider: "groq"
                     key_set: true
-                    model: "gemini-2.0-flash"
+                    model: "llama-3.3-70b-versatile"
         '207':
           description: One or more components degraded
           content:
