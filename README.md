@@ -218,7 +218,7 @@ Aggregate statistics from `storage/app/metrics.json`.
 
 The API is deployed and running at **http://13.140.130.66/**
 
-Server: Ubuntu VPS — Apache + PHP 8.1 + file-based storage (no database).
+Server: Ubuntu VPS — Nginx + PHP 8.1 + file-based storage (no database).
 
 ---
 
