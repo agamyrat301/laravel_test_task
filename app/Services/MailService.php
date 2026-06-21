@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Mail\ContactOwnerMail;
-use App\Mail\ContactUserMail;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Mailtrap\MailtrapClient;
+use Mailtrap\Mime\MailtrapEmail;
+use Symfony\Component\Mime\Address;
 
 class MailService
 {
@@ -15,6 +15,21 @@ class MailService
             'owner_email_sent' => $this->notifyOwner($contactData, $aiResult),
             'user_email_sent'  => $this->confirmToUser($contactData, $aiResult),
         ];
+    }
+
+    private function client(): MailtrapClient
+    {
+        return MailtrapClient::initSendingEmails(
+            apiKey: config('services.mailtrap.api_key')
+        );
+    }
+
+    private function fromAddress(): Address
+    {
+        return new Address(
+            config('mail.from.address', 'noreply@example.com'),
+            config('mail.from.name', config('app.name'))
+        );
     }
 
     private function notifyOwner(array $data, array $aiResult): bool
@@ -27,7 +42,16 @@ class MailService
         }
 
         try {
-            Mail::to($ownerEmail)->send(new ContactOwnerMail($data, $aiResult));
+            $type = ucwords(str_replace('_', ' ', $aiResult['request_type'] ?? 'inquiry'));
+            $html = view('emails.contact-owner', ['contactData' => $data, 'aiResult' => $aiResult])->render();
+
+            $email = (new MailtrapEmail())
+                ->from($this->fromAddress())
+                ->to(new Address($ownerEmail, config('mail.owner_name', 'Portfolio Owner')))
+                ->subject("[New Contact] {$data['name']} — {$type}")
+                ->html($html);
+
+            $this->client()->send($email);
             return true;
         } catch (\Exception $e) {
             Log::channel('contact_requests')->error('Failed to send owner notification email', [
@@ -40,7 +64,18 @@ class MailService
     private function confirmToUser(array $data, array $aiResult): bool
     {
         try {
-            Mail::to($data['email'])->send(new ContactUserMail($data, $aiResult));
+            $html = view('emails.contact-user', ['contactData' => $data, 'aiResult' => $aiResult])->render();
+
+            $email = (new MailtrapEmail())
+                ->from($this->fromAddress())
+                ->replyTo(new Address(
+                    config('mail.owner_email') ?: config('mail.from.address')
+                ))
+                ->to(new Address($data['email'], $data['name']))
+                ->subject('We received your message — ' . config('app.name'))
+                ->html($html);
+
+            $this->client()->send($email);
             return true;
         } catch (\Exception $e) {
             Log::channel('contact_requests')->error('Failed to send user confirmation email', [

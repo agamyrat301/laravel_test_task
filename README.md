@@ -54,12 +54,9 @@ Swagger UI is at `http://localhost:8000/docs/index.html`.
 | `AI_TIMEOUT` | HTTP timeout for AI calls (seconds) | `30` |
 | `OWNER_EMAIL` | Email address that receives contact notifications | *(empty)* |
 | `OWNER_NAME` | Display name for owner email | `Portfolio Owner` |
-| `MAIL_MAILER` | Mail transport (`smtp`, `log`, `array`) | `smtp` |
-| `MAIL_HOST` | SMTP host | `mailpit` |
-| `MAIL_PORT` | SMTP port | `1025` |
+| `MAILTRAP_API_KEY` | Mailtrap sending API key (get it from mailtrap.io) | *(empty — emails skipped)* |
+| `MAIL_FROM_ADDRESS` | Sender address (must be a verified domain in Mailtrap) | `noreply@yourdomain.com` |
 | `RATE_LIMIT_CONTACT` | Max contact submissions per minute per IP | `5` |
-
-> **Local development tip:** set `MAIL_MAILER=log` to write emails to `storage/logs/laravel.log` instead of sending them.
 
 ---
 
@@ -71,7 +68,7 @@ Swagger UI is at `http://localhost:8000/docs/index.html`.
 | Framework | Laravel 10 |
 | HTTP Client | GuzzleHTTP 7 (bundled with Laravel) |
 | AI Provider | Google Gemini (`gemini-2.0-flash`) |
-| Email | Laravel Mailer + Blade templates (Tailwind CSS via CDN) |
+| Email | Mailtrap PHP SDK + Blade templates (Tailwind CSS via CDN) |
 | Rate Limiting | Laravel RateLimiter (file cache driver) |
 | Storage | File system — JSON metrics, JSONL logs |
 | Documentation | OpenAPI 3.0 + Swagger UI 5 |

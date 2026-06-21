@@ -51,12 +51,11 @@ class HealthController extends Controller
 
     private function checkMailConfig(): array
     {
-        $configured = !empty(config('mail.mailers.' . config('mail.default') . '.host'))
-            || config('mail.default') === 'log';
+        $hasKey = !empty(config('services.mailtrap.api_key'));
 
         return [
-            'ok'     => $configured,
-            'mailer' => config('mail.default'),
+            'ok'     => $hasKey,
+            'mailer' => 'mailtrap',
         ];
     }
 
