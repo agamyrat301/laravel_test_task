@@ -4,6 +4,18 @@ A production-ready Laravel 10 backend service for a developer's landing page. Ha
 
 ---
 
+## Live Demo
+
+| Resource | URL |
+|---|---|
+| Landing page | http://13.140.130.66/ |
+| API base | http://13.140.130.66/api |
+| Swagger UI | http://13.140.130.66/docs/index.html |
+| Health check | http://13.140.130.66/api/health |
+| Metrics | http://13.140.130.66/api/metrics |
+
+---
+
 ## Quick Start
 
 ### Requirements
@@ -99,8 +111,9 @@ routes/api.php
 
 ## API Reference
 
-Base URL: `http://localhost:8000/api`
-Full interactive docs: `http://localhost:8000/docs/index.html`
+Base URL (live): `http://13.140.130.66/api`
+Base URL (local): `http://localhost:8000/api`
+Full interactive docs: `http://13.140.130.66/docs/index.html`
 
 ### `POST /api/contact`
 
@@ -204,6 +217,14 @@ Aggregate statistics from `storage/app/metrics.json`.
 
 ## Deployment
 
+### Live Server
+
+The API is deployed and running at **http://13.140.130.66/**
+
+Server: Ubuntu VPS — Apache + PHP 8.1 + file-based storage (no database).
+
+---
+
 ### Option 1 — ngrok (fastest, local machine)
 
 ```bash
@@ -248,7 +269,7 @@ docker run -p 8000:8000 --env-file .env portfolio-api
 
 ```bash
 # Submit contact form
-curl -X POST http://localhost:8000/api/contact \
+curl -X POST http://13.140.130.66/api/contact \
   -H "Content-Type: application/json" \
   -d '{
     "name":    "Jane Smith",
@@ -258,10 +279,10 @@ curl -X POST http://localhost:8000/api/contact \
   }'
 
 # Health check
-curl http://localhost:8000/api/health
+curl http://13.140.130.66/api/health
 
 # Metrics
-curl http://localhost:8000/api/metrics
+curl http://13.140.130.66/api/metrics
 ```
 
 ---
